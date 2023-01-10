@@ -108,18 +108,33 @@ pub fn process_part1(input: &str) -> String {
     })
     .collect();
 
-    result.to_string()
+    result
 }
 
-// pub fn process_part2(input: &str) -> String {
-//     let (_, assignments) = section_assignments(input).unwrap();
-//     let result = assignments.iter().filter(|(range_a, range_b)| {
-//         let a_contains_b = range_a.clone().into_iter().any(|num| range_b.contains(&num));
-//         let b_contains_a = range_b.clone().into_iter().any(|num| range_a.contains(&num));
-//         a_contains_b || b_contains_a
-//     }).count();
-//     result.to_string()
-// }
+// this is basically the part1 just without reverting
+pub fn process_part2(input: &str) -> String {
+    let (_, (mut crate_stacks, moves)) = crates(input).unwrap();
+    for Move { number, from, to } in moves.iter() {
+        let len = crate_stacks[*from as usize].len();
+    
+        for c in crate_stacks[*from as usize]
+        .drain((len - *number as usize)..)
+        .collect::<Vec<&str>>()
+        .iter() {
+            crate_stacks[*to as usize].push(c);
+        }
+    }
+
+    let result: String = crate_stacks
+        .iter()
+        .map(|v| match v.iter().last() {
+            Some(c) => c,
+            None => "",
+    })
+    .collect();
+
+    result
+}
 
 #[cfg(test)]
 mod tests {
@@ -141,10 +156,9 @@ move 1 from 1 to 2";
         assert_eq!(result, "CMZ");
     }
   
-    // #[test]
-    // #[ignore]
-    // fn part2_works() {
-    //     let result = process_part2(INPUT);
-    //     assert_eq!(result, "4");
-    // }
+    #[test]
+    fn part2_works() {
+        let result = process_part2(INPUT);
+        assert_eq!(result, "MCD");
+    }
 }
