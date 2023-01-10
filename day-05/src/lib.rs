@@ -2,7 +2,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::{complete::{
-        self, alpha1, newline, line_ending, anychar, multispace1, digit1, multispace0, space1,
+        self, alpha1, newline, multispace1, digit1, space1,
     },},
     multi::{separated_list1, many1},
     sequence::{delimited, preceded},
@@ -86,10 +86,9 @@ fn crates (
     Ok((input, (final_crates, moves)))
 }
 
-
 pub fn process_part1(input: &str) -> String {
     let (_, (mut crate_stacks, moves)) = crates(input).unwrap();
-    for (i, Move { number, from, to }) in moves.iter().enumerate() {
+    for Move { number, from, to } in moves.iter() {
         let len = crate_stacks[*from as usize].len();
     
         for c in crate_stacks[*from as usize]
