@@ -137,9 +137,76 @@ pub fn process_part1(input: &str) -> String {
         .to_string()
 }
 
-// this is basically the part1 just without reverting
 pub fn process_part2(input: &str) -> String {
-    "result".to_string()
+    let cmds = commands(input).unwrap().1;
+    let mut directories: BTreeMap<String, Vec<File>> = BTreeMap::new();
+    let mut context: Vec<&str> = vec![];
+
+    for command in cmds.iter() {
+        match command {
+            Operation::Cd(Cd::Root) => {
+                context.push("");
+            }
+            Operation::Cd(Cd::Up) => {
+                context.pop();
+            }
+            Operation::Cd(Cd::Down(name)) => {
+                context.push(name);
+            }
+            Operation::Ls(files) => {
+                directories
+                    .entry(context.iter().cloned().intersperse("/").collect::<String>())
+                    .or_insert(vec![]);
+                for file in files.iter() {
+                    match file {
+                        Files::File { size, name } => {
+                            directories
+                                .entry(context.iter().cloned().intersperse("/").collect::<String>())
+                                .and_modify(|vec| {
+                                    vec.push(File { size: *size, name });
+                                });
+                        }
+                        Files::Dir(_) => (),
+                    }
+                }
+            }
+        }
+    }
+
+    let mut sizes: BTreeMap<String, u32> = BTreeMap::new();
+    for (path, files) in directories.iter() {
+        let dirs = path.split("/").collect::<Vec<&str>>();
+        let size = files.iter().map(|File { size, .. }| size).sum::<u32>();
+        for i in 0..dirs.len() {
+            sizes
+                .entry(
+                    (&dirs[0..=i])
+                        .iter()
+                        .cloned()
+                        .intersperse("/")
+                        .collect::<String>(),
+                )
+                .and_modify(|v| *v += size)
+                .or_insert(size);
+        }
+    }
+
+    let total_size = 70_000_000;
+    let needed_space = 30_000_000;
+
+    let used_space = sizes.get("").unwrap();
+
+    let current_free_space = total_size - used_space;
+    let need_to_free_at_least = needed_space - current_free_space;
+
+    let mut valid_dirs = sizes
+        .iter()
+        .filter(|(_, &size)| size > need_to_free_at_least)
+        .map(|(_, size)| size)
+        .collect::<Vec<&u32>>();
+
+    valid_dirs.sort();
+    valid_dirs.iter().next().unwrap().to_string()
 }
 
 #[cfg(test)]
@@ -177,9 +244,8 @@ $ ls
     }
 
     #[test]
-    #[ignore]
     fn part2_works() {
         let result = process_part2(INPUT);
-        assert_eq!(result, "MCD");
+        assert_eq!(result, "24933642");
     }
 }
