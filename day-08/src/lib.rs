@@ -97,7 +97,65 @@ pub fn process_part1(input: &str) -> String {
 }
 
 pub fn process_part2(input: &str) -> String {
-    "".to_string()
+    let (_, trees) = parse_trees(input).unwrap();
+    let max_length = trees.len() - 1;
+    let mut high_score = 0;
+
+    let y_max = trees.len();
+    let x_max = trees[0].len();
+
+    for (y_index, tree_line) in trees.iter().enumerate() {
+        for (x_index, tree_house_height) in tree_line.iter().enumerate() {
+            let mut scores = [0, 0, 0, 0];
+            println!("x: {x_index}, Y: {y_index}, {tree_house_height}");
+
+            // to left
+            for x_pos in (0..x_index).rev() {
+                if trees[y_index][x_pos] < *tree_house_height {
+                    scores[0] += 1;
+                } else {
+                    scores[0] += 1;
+                    break;
+                }
+            }
+
+            // to right
+            for x_pos in (x_index + 1)..x_max {
+                if trees[y_index][x_pos] < *tree_house_height {
+                    scores[1] += 1;
+                } else {
+                    scores[1] += 1;
+                    break;
+                }
+            }
+
+            // to up
+            for y_pos in (0..y_index).rev() {
+                if trees[y_pos][x_index] < *tree_house_height {
+                    scores[2] += 1;
+                } else {
+                    scores[2] += 1;
+                    break;
+                }
+            }
+
+            // to down
+            for y_pos in (y_index + 1)..y_max {
+                if trees[y_pos][x_index] < *tree_house_height {
+                    scores[3] += 1;
+                } else {
+                    scores[3] += 1;
+                    break;
+                }
+            }
+            let scenic_score = scores.iter().product::<u32>();
+
+            if scenic_score > high_score {
+                high_score = scenic_score
+            }
+        }
+    }
+    high_score.to_string()
 }
 
 #[cfg(test)]
@@ -117,9 +175,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn part2_works() {
         let result = process_part2(INPUT);
-        assert_eq!(result, "24933642");
+        assert_eq!(result, "8");
     }
 }
